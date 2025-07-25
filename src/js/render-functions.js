@@ -1,8 +1,10 @@
+import iziToast from 'izitoast';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const gallery = document.querySelector('.gallery');
 const loader = document.querySelector('.loader');
+const btnLoad = document.querySelector('.btn-load');
 
 let lightbox = null;
 
@@ -38,7 +40,7 @@ export function createGallery(images) {
     )
     .join('');
 
-  gallery.innerHTML = markup;
+  gallery.insertAdjacentHTML('beforeend', markup);
 
   if (lightbox) {
     lightbox.refresh();
@@ -60,4 +62,11 @@ export function showLoader() {
 
 export function hideLoader() {
   loader.classList.add('is-hidden');
+}
+
+export function showLoadMoreButton() {
+  btnLoad.classList.remove('is-hidden');
+}
+export function hideLoadMoreButton() {
+  btnLoad.classList.add('is-hidden');
 }
