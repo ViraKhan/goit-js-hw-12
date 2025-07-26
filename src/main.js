@@ -18,15 +18,21 @@ const loadMoreBtn = document.querySelector('.btn-load');
 
 let currentQuery = '';
 let currentPage = 1;
+const PER_PAGE = 15;
 let totalHits = 0;
+let loadedImagesCount = 0;
 
 form.addEventListener('submit', handleSubmit);
 loadMoreBtn.addEventListener('click', handleLoadMore);
+
 async function handleSubmit(event) {
   event.preventDefault();
   const query = input.value.trim();
+  currentQuery = query;
+  currentPage = 1;
+  loadedImagesCount = 0;
 
-  if (!query) {
+  if (query === '') {
     iziToast.warning({
       message: 'Введіть назву зображення!',
       position: 'topRight',
@@ -34,11 +40,10 @@ async function handleSubmit(event) {
     return;
   }
 
-  currentQuery = query;
-  currentPage = 1;
   clearGallery();
   hideLoadMoreButton();
   showLoader();
+  loadMoreBtn.disabled = true;
 
   try {
     const data = await getImagesByQuery(currentQuery, currentPage);
@@ -56,35 +61,38 @@ async function handleSubmit(event) {
     }
 
     createGallery(data.hits);
-    currentPage += 1;
 
-    if (data.hits.length < 15 || data.totalHits <= 15) {
-      hideLoadMoreButton();
-    } else {
+    loadedImagesCount = data.hits.length;
+
+    if (totalHits > loadedImagesCount) {
       showLoadMoreButton();
+    } else {
+      hideLoadMoreButton();
     }
+
+    currentPage += 1;
   } catch {
     iziToast.error({
       message: 'Сталася помилка при завантаженні зображень!',
       position: 'topRight',
     });
   } finally {
+    loadMoreBtn.disabled = false;
     hideLoader();
   }
 }
 
 async function handleLoadMore() {
-  hideLoadMoreButton();
   showLoader();
+  loadMoreBtn.disabled = true;
 
   try {
     const data = await getImagesByQuery(currentQuery, currentPage);
     createGallery(data.hits);
-    currentPage++;
 
-    const alreadyLoaded = (currentPage - 1) * 15;
+    loadedImagesCount += data.hits.length;
 
-    if (alreadyLoaded >= totalHits) {
+    if (loadedImagesCount >= totalHits || data.hits.length < PER_PAGE)  {
       iziToast.info({
         message: `We're sorry, but you've reached the end of search results.`,
         position: 'topRight',
@@ -94,7 +102,8 @@ async function handleLoadMore() {
       showLoadMoreButton();
     }
 
-    // Прокручування вниз на висоту 2 карток
+    currentPage += 1;
+
     scrollGallerySmoothly();
   } catch {
     iziToast.error({
@@ -102,6 +111,7 @@ async function handleLoadMore() {
       position: 'topRight',
     });
   } finally {
+    loadMoreBtn.disabled = false;
     hideLoader();
   }
 }
